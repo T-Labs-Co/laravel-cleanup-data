@@ -8,17 +8,22 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-24.04, ubuntu-26.04]
         php: ['8.4']
         laravel: ['^12.0', '^13.0']
         include:
           - laravel: '^12.0'
-            testbench: '^10.0'
+            testbench: '^10.0',
+            pest: '^4.0',
+            pest-laravel: '^4.0'
           - laravel: '^13.0'
-            testbench: '^11.0'
+            testbench: '^11.0',
+            pest: '^5.0',
+            pest-laravel: '^5.0'
 
     name: PHP ${{ matrix.php }} / Laravel ${{ matrix.laravel }}
 
