@@ -1,0 +1,70 @@
+{
+    "name": "t-labs-co/laravel-cleanup-data",
+    "description": "Centralized data-retention and cleanup framework for Laravel — prune Eloquent models, clean storage files, run custom cleanup logic, and schedule operations automatically.",
+    "keywords": [
+        "laravel",
+        "cleanup",
+        "data-retention",
+        "pruning",
+        "maintenance",
+        "artisan",
+        "scheduler"
+    ],
+    "license": "MIT",
+    "version": "1.0.0",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Ty Huynh",
+            "email": "hongty.huynh@gmail.com",
+            "homepage": "https://tyhuynh.id.vn",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.4",
+        "illuminate/support": "^12|^13",
+        "illuminate/console": "^12|^13",
+        "illuminate/filesystem": "^12|^13"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^9|^10",
+        "pestphp/pest": "^3",
+        "pestphp/pest-plugin-laravel": "^3",
+        "larastan/larastan": "^3",
+        "laravel/pint": "^1"
+    },
+    "autoload": {
+        "psr-4": {
+            "TLabsCo\\LaravelCleanupData\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "TLabsCo\\LaravelCleanupData\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/pest --parallel",
+        "analyse": "vendor/bin/phpstan analyse --memory-limit=1G",
+        "format": "vendor/bin/pint"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "TLabsCo\\LaravelCleanupData\\Providers\\LaravelCleanupDataServiceProvider"
+            ],
+            "aliases": {
+                "Cleaner": "TLabsCo\\LaravelCleanupData\\Facades\\Cleaner"
+            }
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
