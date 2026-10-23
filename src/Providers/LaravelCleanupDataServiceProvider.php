@@ -11,6 +11,7 @@ use TLabsCo\LaravelCleanupData\Console\Commands\ListCleanersCommand;
 use TLabsCo\LaravelCleanupData\Console\Commands\RunCleanupCommand;
 use TLabsCo\LaravelCleanupData\Core\CleanupRegistry;
 use TLabsCo\LaravelCleanupData\Core\CleanupRunner;
+use TLabsCo\LaravelCleanupData\Core\Retention\CleanupRetentionEngine;
 use TLabsCo\LaravelCleanupData\Core\Services\ModelPrunerFactory;
 use TLabsCo\LaravelCleanupData\Core\Supports\CleanerResolver;
 use TLabsCo\LaravelCleanupData\Core\Supports\CleanerTagsParser;
@@ -40,6 +41,10 @@ class LaravelCleanupDataServiceProvider extends ServiceProvider
         // Register Tag Parser
         $this->app->singleton(CleanerTagsParser::class);
 
+        // Register CleanupRetentionEngine as singleton
+        $this->app->singleton(CleanupRetentionEngine::class);
+        $this->app->alias(CleanupRetentionEngine::class, ModelPrunerFactory::class);
+
         // Register ModelPrunerFactory as singleton
         $this->app->singleton(ModelPrunerFactory::class);
 
@@ -66,6 +71,10 @@ class LaravelCleanupDataServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__.'/../../config/laravel-cleanup-data.php' => config_path('laravel-cleanup-data.php'),
             ], 'laravel-cleanup-data-config');
+
+            $this->publishes([
+                __DIR__.'/../Databases/Migrations/2026_10_22_100001_add_anonymized_at_to_users_table.php' => database_path('migrations/2026_10_22_100001_add_anonymized_at_to_users_table.php'),
+            ], 'data-cleanup-migrations');
 
             $this->registerSchedule();
         }

@@ -104,6 +104,37 @@ return [
         'days' => 7,
     ],
 
+    /*
+   |--------------------------------------------------------------------------
+   | Retention Engine Configuration
+   |--------------------------------------------------------------------------
+   |
+   | Configuration options for rule-based retention cleaners and actions.
+   |
+   */
+    'retention' => [
+        /**
+         * Hard cap of maximum affected records per run before safety abort
+         */
+        'max_affected' => (int) env('DATA_CLEANUP_RETENTION_MAX_AFFECTED', 10_000),
+
+        /**
+         * Chunk size for batch processing
+         */
+        'chunk_size' => (int) env('DATA_CLEANUP_RETENTION_CHUNK_SIZE', 500),
+
+        /**
+         * Default marker column for idempotent anonymization
+         */
+        'marker_column' => env('DATA_CLEANUP_RETENTION_MARKER_COLUMN', 'anonymized_at'),
+        'anonymized_at_column' => env('DATA_CLEANUP_RETENTION_ANONYMIZED_AT_COLUMN', 'anonymized_at'),
+
+        /**
+         * Default domain for hashed email anonymization
+         */
+        'hash_domain' => env('DATA_CLEANUP_RETENTION_HASH_DOMAIN', 'anon.invalid'),
+    ],
+
     'cleaners_classes' => [
         GenericModelCleaner::class => [
             'alias' => 'generic-models',

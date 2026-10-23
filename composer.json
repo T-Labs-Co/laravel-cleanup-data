@@ -11,7 +11,7 @@
         "scheduler"
     ],
     "license": "MIT",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "type": "library",
     "authors": [
         {
@@ -25,7 +25,8 @@
         "php": "^8.4",
         "illuminate/support": "^12|^13",
         "illuminate/console": "^12|^13",
-        "illuminate/filesystem": "^12|^13"
+        "illuminate/filesystem": "^12|^13",
+        "illuminate/database": "^12|^13"
     },
     "require-dev": {
         "orchestra/testbench": "^10|^11",
