@@ -22,7 +22,7 @@ it('runs cleanup with force option successfully', function () {
 it('runs cleanup in dry-run mode without deleting data', function () {
     $this->artisan('cleanup:run', ['--dry-run' => true])
         ->expectsOutputToContain('DRY RUN MODE')
-        ->expectsOutputToContain('Would delete 10 items')
+        ->expectsOutputToContain('Would process 10 items')
         ->assertSuccessful();
 });
 

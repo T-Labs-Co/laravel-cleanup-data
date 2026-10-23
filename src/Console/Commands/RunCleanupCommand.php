@@ -66,9 +66,9 @@ class RunCleanupCommand extends Command
                 if ($result->exception !== null) {
                     $this->error("  ✗ Exception: {$result->exception->getMessage()}");
                 } elseif ($result->success) {
-                    $deletedCount = $dryRun ? ($result->itemsDeleted > 0 ? $result->itemsDeleted : $result->itemsProcessed) : $result->itemsDeleted;
+                    $processedCount = $dryRun ? ($result->itemsDeleted > 0 ? $result->itemsDeleted : $result->itemsProcessed) : $result->itemsDeleted;
                     $msg = $dryRun
-                        ? "Would delete {$deletedCount} items"
+                        ? "Would process {$processedCount} items"
                         : "Deleted {$result->itemsDeleted} items";
                     $this->line("  ✓ {$msg}");
 
@@ -137,8 +137,8 @@ class RunCleanupCommand extends Command
         $this->line("Items processed: {$totalProcessed}");
 
         if ($dryRun) {
-            $wouldDelete = $totalDeleted > 0 ? $totalDeleted : $totalProcessed;
-            $this->warn("Would delete: {$wouldDelete} items");
+            $wouldProcess = $totalDeleted > 0 ? $totalDeleted : $totalProcessed;
+            $this->warn("Would process: {$wouldProcess} items");
         } else {
             $this->line("Items deleted: {$totalDeleted}");
         }
