@@ -39,23 +39,11 @@ return [
         ],
 
         /**
-         * Expired Files Cleaner Configuration
+         * Custom options configuration via prefix config key Cleaner `getConfigPrefix`
+         * 'custom_cleaner_key' => [
+         *      'enabled' => (bool) env('DATA_CLEANUP_CUSTOM_ENABLED', true),
+         * ]
          */
-        'expired_files' => [
-            'enabled' => (bool) env('DATA_CLEANUP_EXPIRED_FILES_ENABLED', false),
-            'disk' => env('DATA_CLEANUP_STORAGE_DISK', 'local'),
-
-            /**
-             * Folders to clean (relative to storage_path())
-             * Can be a comma-separated string or array
-             */
-            'folders' => env('DATA_CLEANUP_STORAGE_FOLDERS', 'temp,exports,tmp'),
-
-            /**
-             * Number of days before a file is considered expired
-             */
-            'expired_in_days' => (int) env('DATA_CLEANUP_STORAGE_EXPIRED_DAYS', 30),
-        ],
     ],
 
     /**
@@ -144,7 +132,7 @@ return [
             'alias' => 'expired-files',
             'config_key' => 'expired_files',
             'options' => [
-                'enabled' => (bool) env('DATA_CLEANUP_EXPIRED_FILES_ENABLED', false),
+                'enabled' => (bool) env('DATA_CLEANUP_EXPIRED_FILES_ENABLED', true),
 
                 /**
                  * Disk to clean (relative to storage_path())
