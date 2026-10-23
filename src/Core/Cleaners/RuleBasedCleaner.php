@@ -62,12 +62,12 @@ abstract class RuleBasedCleaner extends BaseCleaner
      */
     protected function maxAffected(): int
     {
-        return (int) $this->config('max_affected', config('data-cleanup.retention.max_affected', 10_000));
+        return (int) $this->config('max_affected', config('laravel-cleanup-data.retention.max_affected', 10_000));
     }
 
     protected function chunkSize(): int
     {
-        return (int) $this->config('chunk_size', config('data-cleanup.retention.chunk_size', 500));
+        return (int) $this->config('chunk_size', config('laravel-cleanup-data.retention.chunk_size', 500));
     }
 
     public function cleanup(bool $dryRun = false): CleanupResult

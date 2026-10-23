@@ -338,8 +338,8 @@ class ModelPruner
     {
         try {
             $query = $this->buildQuery();
-            $maxLimit = $this->maxAffected ?? (int) config('data-cleanup.retention.max_affected', 10_000);
-            $chunkLimit = $this->chunkSize ?? (int) config('data-cleanup.retention.chunk_size', 500);
+            $maxLimit = $this->maxAffected ?? (int) config('laravel-cleanup-data.retention.max_affected', 10_000);
+            $chunkLimit = $this->chunkSize ?? (int) config('laravel-cleanup-data.retention.chunk_size', 500);
 
             $matched = (clone $query)->count();
 

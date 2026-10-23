@@ -23,7 +23,7 @@ final class AnonymizeAction implements CleanupAction
         ?string $markerColumn = null,
         private readonly bool $quietly = true,
     ) {
-        $this->markerColumn = $markerColumn ?? (string) (config('data-cleanup.retention.marker_column') ?? config('data-cleanup.retention.anonymized_at_column', 'anonymized_at'));
+        $this->markerColumn = $markerColumn ?? (string) (config('laravel-cleanup-data.retention.marker_column') ?? config('laravel-cleanup-data.retention.anonymized_at_column', 'anonymized_at'));
     }
 
     public function execute(Model $model): bool

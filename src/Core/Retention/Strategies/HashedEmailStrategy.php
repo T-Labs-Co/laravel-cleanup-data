@@ -16,7 +16,7 @@ final readonly class HashedEmailStrategy implements AnonymizationStrategy
 
     public function __construct(?string $domain = null)
     {
-        $this->domain = $domain ?? (string) config('data-cleanup.retention.hash_domain', 'anon.invalid');
+        $this->domain = $domain ?? (string) config('laravel-cleanup-data.retention.hash_domain', 'anon.invalid');
     }
 
     public function apply(mixed $value, Model $model, string $field): mixed
