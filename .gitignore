@@ -1,3 +1,6 @@
+/.fleet
+/.idea
+/.vscode
 /vendor/
 /build/
 .phpunit.cache
@@ -9,3 +12,5 @@ composer.lock
 .env.backup
 .DS_Store
 Thumbs.db
+*.sqlite
+.output.txt

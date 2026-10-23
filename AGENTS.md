@@ -29,7 +29,7 @@ This document provides guidelines, architectural context, and development instru
 ```text
 packages/t-labs-co/laravel-cleanup-data/
 ├── config/
-│   └── laravel-cleanup-data.php       # Package configuration (schedule, logging, cleaners, pruning)
+│   └── laravel-cleanup-data.php       # Package configuration (schedule, logging, cleaners, pruning, retention)
 ├── src/
 │   ├── Console/
 │   │   └── Commands/
@@ -39,7 +39,8 @@ packages/t-labs-co/laravel-cleanup-data/
 │   │   ├── Cleaners/
 │   │   │   ├── BaseCleaner.php         # Abstract base cleaner with tag & config helpers
 │   │   │   ├── ExpiredFilesCleaner.php # Storage files retention cleaner
-│   │   │   └── GenericModelCleaner.php # Config-driven Eloquent model pruner
+│   │   │   ├── GenericModelCleaner.php # Config-driven Eloquent model pruner
+│   │   │   └── RuleBasedCleaner.php    # Abstract cleaner that composes RetentionRule + CleanupAction
 │   │   ├── Contracts/
 │   │   │   ├── CleanerContract.php     # Interface for custom & core cleaners
 │   │   │   └── CleanupHookContract.php # Interface for lifecycle hooks
@@ -47,8 +48,35 @@ packages/t-labs-co/laravel-cleanup-data/
 │   │   │   ├── AfterCleanupHook.php    # Lifecycle hook executed after cleanup
 │   │   │   ├── BeforeCleanupHook.php   # Lifecycle hook executed before cleanup
 │   │   │   └── LoggingHook.php         # Logger hook capturing execution stats
+│   │   ├── Retention/
+│   │   │   ├── Action.php              # Enum & factory for all built-in cleanup actions
+│   │   │   ├── Strategy.php            # Fluent factory for anonymization strategies
+│   │   │   ├── CleanupRetentionEngine.php # model()/batch() helpers for ModelPruner composition
+│   │   │   ├── Actions/
+│   │   │   │   ├── AnonymizeAction.php # Idempotent per-field anonymization
+│   │   │   │   ├── DeleteAction.php    # Soft-delete or force-delete
+│   │   │   │   ├── NullifyAction.php   # Set columns to null
+│   │   │   │   └── TransformAction.php # Arbitrary per-column transformation closures
+│   │   │   ├── Contracts/
+│   │   │   │   ├── AnonymizationStrategy.php # Interface for anonymization strategies
+│   │   │   │   ├── CleanupAction.php   # Interface for cleanup actions
+│   │   │   │   └── RetentionRule.php   # Interface for retention rules
+│   │   │   ├── Exceptions/
+│   │   │   │   └── SafetyLimitExceeded.php # Thrown when matched rows exceed max_affected
+│   │   │   ├── Rules/
+│   │   │   │   ├── ExceptRule.php      # Wraps a rule with whereNot() — safety-hold exemption
+│   │   │   │   ├── OlderThanRule.php   # Match rows older than days/months/years on a column
+│   │   │   │   ├── RetainUntil.php     # Retain rows matching a condition until a window expires
+│   │   │   │   └── WhereRule.php       # Arbitrary closure or Eloquent scope as a rule
+│   │   │   └── Strategies/
+│   │   │       ├── ClosureStrategy.php # Fully custom closure strategy
+│   │   │       ├── FixedStrategy.php   # Replace with a fixed constant
+│   │   │       ├── HashedEmailStrategy.php # HMAC-derived unique placeholder email
+│   │   │       ├── MaskStrategy.php    # Mask characters, keeping the last N visible
+│   │   │       ├── NullStrategy.php    # Set field to null
+│   │   │       └── Strategy.php        # Base marker (strategies implement AnonymizationStrategy)
 │   │   ├── Services/
-│   │   │   ├── ModelPruner.php         # Fluent builder for Eloquent model pruning
+│   │   │   ├── ModelPruner.php         # Fluent builder for Eloquent model pruning & retention
 │   │   │   └── ModelPrunerFactory.php  # Factory for building ModelPruner instances
 │   │   ├── Supports/
 │   │   │   ├── CleanerResolver.php     # Resolves cleaner classes or instances
@@ -58,6 +86,9 @@ packages/t-labs-co/laravel-cleanup-data/
 │   │   │   └── CleanupResult.php       # Standardized immutable cleanup outcome VO
 │   │   ├── CleanupRegistry.php         # Central registry for managing registered cleaners
 │   │   └── CleanupRunner.php           # Execution engine coordinating hooks & cleaners
+│   ├── Databases/
+│   │   └── Migrations/
+│   │       └── 2026_10_22_100001_add_anonymized_at_to_users_table.php # Example migration for anonymization marker
 │   ├── Facades/
 │   │   └── Cleaner.php                 # Static facade proxying to CleanupRunner / ModelPruner
 │   ├── Providers/
@@ -67,6 +98,11 @@ packages/t-labs-co/laravel-cleanup-data/
 └── tests/
     ├── Feature/                        # Integration and Artisan command tests
     ├── Unit/                           # Unit tests for core runners, registry, VOs, and pruners
+    │   └── Core/
+    │       ├── AnonymizationStrategiesTest.php
+    │       ├── RetentionActionsTest.php
+    │       ├── RetentionRulesTest.php
+    │       └── RuleBasedCleanerTest.php
     ├── Fixtures/                       # Test stub classes and dummy models
     ├── Pest.php                        # Pest setup and configuration
     └── TestCase.php                    # Base testbench TestCase configuring SQLite memory DB
@@ -95,13 +131,23 @@ packages/t-labs-co/laravel-cleanup-data/
   - Return `deleted: 0` or accurate counts depending on dry-run semantics.
 
 ### 4.4 Model Pruning
-- `ModelPruner` supports soft-delete pruning (`force: true` for `forceDelete()`, `force: false` for `delete()`), custom retention columns, chunking, and dry-run preview.
+- `ModelPruner` supports soft-delete pruning (`force: true` for `forceDelete()`, `force: false` for `delete()`), custom retention columns, chunking, dry-run preview, and (v1.1.0) composable `RetentionRule` / `CleanupAction` API.
+- In v1.1.0, `ModelPruner` gained: `.rule()`, `.olderThan()`, `.where()`, `.except()`, `.scope()`, `.withTrashed()`, `.onlyTrashed()`, `.action()`, `.anonymize()`, `.nullify()`, `.transform()`, `.maxAffected()`, `.chunkSize()`.
 - Ensure queries properly handle timestamps and edge cases (e.g., negative/zero day intervals, custom date columns).
 
-### 4.5 Configuration
+### 4.5 Retention Engine (v1.1.0)
+- `RuleBasedCleaner` is the preferred base for new cleaners; it handles chunking, dry-run, safety limits, and logging automatically.
+- Rules are ANDed in query order; the `ExceptRule` wraps any rule with `whereNot()` and is intended for legal-hold or safety-hold exemptions.
+- `AnonymizeAction` is idempotent: records with a non-null value in the marker column (default `anonymized_at`) are skipped automatically.
+- `SafetyLimitExceeded` is thrown **before** any row is written when matched count exceeds `max_affected`; always configure a reasonable limit.
+- Anonymization strategies implement `AnonymizationStrategy`; use the `Strategy` factory (`Strategy::null()`, `Strategy::hashedEmail()`, etc.) for the built-in ones.
+- The `Action` enum provides factory methods (`Action::delete()`, `Action::anonymize(...)`, etc.) for all built-in actions.
+
+### 4.6 Configuration
 - Main config file key is `laravel-cleanup-data` (not `data-cleanup`).
 - Config publish tag is `laravel-cleanup-data-config`.
 - Avoid hardcoded values in services — always use config defaults with sensible fallbacks.
+- The `retention` config block (added in v1.1.0) controls `max_affected`, `chunk_size`, `marker_column`, and `hash_domain` for rule-based cleaners and anonymization.
 
 ---
 
@@ -128,3 +174,5 @@ vendor/bin/pint
 - Feature tests extending `TLabsCo\LaravelCleanupData\Tests\TestCase` have access to an in-memory SQLite database.
 - When creating tests that test database pruning, use `TLabsCo\LaravelCleanupData\Tests\Fixtures\TestModel`.
 - Always verify both standard execution and `--dry-run` modes for any command or cleaner logic.
+- For `RuleBasedCleaner` tests, verify the safety-limit abort path (`SafetyLimitExceeded`) as well as successful execution and dry-run paths.
+- For `AnonymizeAction` tests, verify idempotency: running the action twice on the same record must not change the record on the second pass.
