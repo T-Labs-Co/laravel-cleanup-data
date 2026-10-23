@@ -8,7 +8,7 @@ This document provides guidelines, architectural context, and development instru
 
 - **Package Name:** `t-labs-co/laravel-cleanup-data`
 - **Namespace:** `TLabsCo\LaravelCleanupData`
-- **Description:** Centralized data-retention and cleanup framework for Laravel — prune Eloquent models, clean storage files, execute custom cleanup logic, and schedule operations automatically.
+- **Description:** GDPR-ready data retention, anonymization, and cleanup framework for Laravel — enforce retention policies, pseudonymize PII fields, prune Eloquent models, clean storage files, and schedule automated compliance operations.
 - **License:** MIT
 - **Authors:** Ty Huynh (<hongty.huynh@gmail.com>)
 

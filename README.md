@@ -5,26 +5,95 @@
 [![License](https://img.shields.io/packagist/l/t-labs-co/laravel-cleanup-data.svg)](https://packagist.org/packages/t-labs-co/laravel-cleanup-data)
 [![PHP](https://img.shields.io/packagist/php-v/t-labs-co/laravel-cleanup-data.svg)](https://packagist.org/packages/t-labs-co/laravel-cleanup-data)
 
-Centralized data-retention and cleanup framework for Laravel.
-Prune Eloquent models, clean storage files, run custom cleanup logic, and schedule operations — all from a single config.
+    GDPR-ready data retention, anonymization, and cleanup framework for Laravel.
+    Enforce data retention policies, pseudonymize personal data (PII), prune Eloquent models, clean storage files, and schedule automated compliance operations — all from a single config.
 
 ## Features
 
+- 🔒 **GDPR Compliance**: Built-in tools for data retention policies, right-to-be-forgotten, and data minimization principles.
+- 🎭 **Data Anonymization** *(v1.1.0)*: Pseudonymize PII fields with idempotent, field-level strategies — hashed emails, masked values, nullification, fixed replacements, and custom closures.
+- 📋 **Retention Rules Engine** *(v1.1.0)*: Compose declarative retention rules (`OlderThan`, `Where`, `Except`, `RetainUntil`) with any cleanup action — no boilerplate query code required.
+- 🛡️ **Safety Limits** *(v1.1.0)*: Hard caps per run — aborts before touching data when matched rows exceed `max_affected`, preventing accidental mass operations.
 - 🚀 **Centralized Cleanup Registry**: Register and execute cleanup actions with tag and alias support.
-- 🧹 **Generic Model Pruner**: Easily prune records from Eloquent models based on date/time columns via config or fluent builder.
+- 🧹 **Generic Model Pruner**: Prune records from Eloquent models based on date/time columns via config or fluent builder.
 - 📁 **Expired Files Cleaner**: Clean up old files from storage disks and directories automatically.
 - ⚡ **Fluent API & Facade**: Convenient `Cleaner::model(User::class)->days(30)->clean()` API for ad-hoc cleanup.
-- 🔍 **Dry-Run Mode**: Safely preview items that would be deleted without touching real data.
-- ⏰ **Built-in Scheduling**: Config-driven automated cron scheduling.
-- 🪝 **Hook & Logging System**: Lifecycle hooks (`before`, `after`, logging) for comprehensive observability and error tracking.
-- 📋 **Rule-Based Cleaners** *(v1.1.0)*: Compose `RetentionRule` objects with any `CleanupAction` — no boilerplate query code required.
-- 🔒 **Anonymization** *(v1.1.0)*: GDPR-ready field-level anonymization with idempotency guard (`anonymized_at`) and built-in strategies (hashed email, mask, null, fixed, custom closure).
-- 🛡️ **Safety Limit** *(v1.1.0)*: Hard cap per run — aborts before touching data when matched rows exceed `max_affected`.
+- 🔍 **Dry-Run Mode**: Safely preview items that would be deleted or anonymized without touching real data.
+- ⏰ **Built-in Scheduling**: Config-driven automated cron scheduling for recurring compliance tasks.
+- 🪝 **Hook & Logging System**: Lifecycle hooks (`before`, `after`, logging) for comprehensive audit trails and error tracking.
 
 ## Requirements
 
 - PHP 8.4+
 - Laravel 12.0+ or 13.0+
+
+## GDPR & Privacy Compliance
+
+This package provides the building blocks to implement key GDPR requirements:
+
+### Data Retention
+
+Enforce data minimization by automatically pruning or anonymizing data that exceeds retention periods:
+
+```php
+// Anonymize user PII after 1 year of inactivity
+ModelPruner::for(User::class)
+    ->olderThan(years: 1)
+    ->anonymize([
+        'email' => Strategy::hashedEmail(),
+        'phone' => Strategy::mask(keepLast: 4),
+        'name'  => Strategy::fixed('Anonymized User'),
+    ])
+    ->clean();
+```
+
+### Right to be Forgotten
+
+Support data subject deletion requests with safe, auditable cleanup operations:
+
+```php
+// Delete all data for a specific user across multiple models
+CleanupRetentionEngine::batch([
+    ModelPruner::for(User::class)->where('id', $userId)->action(Action::delete()),
+    ModelPruner::for(Order::class)->where('user_id', $userId)->action(Action::delete()),
+    ModelPruner::for(ActivityLog::class)->where('user_id', $userId)->action(Action::delete()),
+])->clean();
+```
+
+### Pseudonymization
+
+Replace identifiable fields with irreversible placeholders while preserving data utility for analytics:
+
+```php
+// Pseudonymize customer data for analytics while preserving unique identifiers
+ModelPruner::for(Customer::class)
+    ->olderThan(months: 24)
+    ->anonymize([
+        'email'    => Strategy::hashedEmail(),      // anon_<hmac>@anon.invalid (preserves uniqueness)
+        'name'     => Strategy::null(),              // Remove entirely
+        'ip_addr'  => Strategy::mask(keepLast: 2),   // Mask IP, keep last 2 octets
+        'notes'    => Strategy::closure(fn ($v) => '[redacted]'),
+    ])
+    ->clean();
+```
+
+### Safety Guarantees
+
+- **Idempotent anonymization**: Records with `anonymized_at` set are skipped on subsequent runs.
+- **Safety limits**: Operations abort before any changes if matched rows exceed `max_affected`.
+- **Dry-run preview**: Always test cleanup scopes before execution with `--dry-run`.
+- **Audit logging**: All operations are logged with matched counts, changed counts, and samples.
+
+### Compliance Feature Mapping
+
+| GDPR Requirement | Package Feature | Implementation |
+|---|---|---|
+| Data Minimization (Art. 5) | Retention Rules | `OlderThanRule`, `RetainUntil` |
+| Right to Erasure (Art. 17) | Delete Actions | `Action::delete()`, `Action::forceDelete()` |
+| Pseudonymization (Art. 4) | Anonymization | `Strategy::hashedEmail()`, `Strategy::mask()` |
+| Purpose Limitation (Art. 5) | Tag-based Cleaners | Tag cleaners by purpose (`analytics`, `marketing`) |
+| Data Portability (Art. 20) | Dry-run Mode | Preview data before export or deletion |
+| Accountability (Art. 5) | Logging Hooks | `LoggingHook` provides audit trails |
 
 ## Installation
 
@@ -39,7 +108,27 @@ php artisan vendor:publish --tag=laravel-cleanup-data-config
 
 ## Quick Start (3 minutes)
 
-### 1. Fluent Facade Pruning
+### 1. Data Anonymization (GDPR)
+
+Pseudonymize personal data while preserving data structure:
+
+```php
+use TLabsCo\LaravelCleanupData\Facades\Cleaner;
+use TLabsCo\LaravelCleanupData\Core\Retention\Strategy;
+use App\Models\User;
+
+// Anonymize inactive users' PII fields
+$result = Cleaner::model(User::class)
+    ->olderThan(years: 1)
+    ->anonymize([
+        'email' => Strategy::hashedEmail(),
+        'phone' => Strategy::mask(keepLast: 4),
+        'name'  => Strategy::fixed('Anonymized User'),
+    ])
+    ->clean();
+```
+
+### 2. Fluent Facade Pruning
 
 ```php
 use TLabsCo\LaravelCleanupData\Facades\Cleaner;
@@ -56,7 +145,7 @@ $preview = Cleaner::model(ActivityLog::class)
     ->dryRun();
 ```
 
-### 2. Rule-Based Pruning (v1.1.0)
+### 3. Rule-Based Pruning
 
 Compose rules and actions fluently on `ModelPruner`:
 
@@ -85,7 +174,7 @@ $result = ModelPruner::for(User::class)
     ->clean();
 ```
 
-### 3. Config-Driven Model Pruning
+### 4. Config-Driven Model Pruning
 
 In `config/laravel-cleanup-data.php`:
 
@@ -104,7 +193,7 @@ In `config/laravel-cleanup-data.php`:
 ],
 ```
 
-### 4. Artisan Commands
+### 5. Artisan Commands
 
 ```bash
 # Run all enabled cleaners
@@ -120,6 +209,37 @@ php artisan cleanup:run --cleaner=generic-models
 # List all registered cleaners
 php artisan cleanup:list
 ```
+
+### Database Migration for Anonymization
+
+To enable idempotent anonymization, add the marker column to your tables:
+
+```bash
+php artisan vendor:publish --tag=laravel-cleanup-data-migrations
+php artisan migrate
+```
+
+Or create your own migration:
+
+```php
+Schema::table('users', function (Blueprint $table) {
+    $table->timestamp('anonymized_at')->nullable()->after('updated_at');
+});
+```
+
+### Environment Variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `DATA_CLEANUP_ENABLED` | `true` | Master switch for all cleanup operations |
+| `DATA_CLEANUP_RETENTION_MAX_AFFECTED` | `10000` | Safety limit: max rows per run |
+| `DATA_CLEANUP_RETENTION_CHUNK_SIZE` | `500` | Batch chunk size for memory efficiency |
+| `DATA_CLEANUP_RETENTION_MARKER_COLUMN` | `anonymized_at` | Idempotency marker column name |
+| `DATA_CLEANUP_RETENTION_HASH_DOMAIN` | `anon.invalid` | Domain for hashed email strategy |
+| `DATA_CLEANUP_SCHEDULE_ENABLED` | `false` | Enable automatic cron scheduling |
+| `DATA_CLEANUP_SCHEDULE_EXPRESSION` | `0 2 * * *` | Cron expression (default: 2 AM daily) |
+| `DATA_CLEANUP_LOGGING_ENABLED` | `true` | Enable detailed cleanup logging |
+| `DATA_CLEANUP_LOG_LEVEL` | `info` | Log level for cleanup operations |
 
 ## Documentation
 

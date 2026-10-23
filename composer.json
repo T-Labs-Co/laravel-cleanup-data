@@ -1,14 +1,20 @@
 {
     "name": "t-labs-co/laravel-cleanup-data",
-    "description": "Centralized data-retention and cleanup framework for Laravel — prune Eloquent models, clean storage files, run custom cleanup logic, and schedule operations automatically.",
+    "description": "GDPR-ready data retention, anonymization, and cleanup framework for Laravel — prune Eloquent models, pseudonymize PII fields, enforce retention policies, and schedule automated compliance operations.",
     "keywords": [
         "laravel",
-        "cleanup",
+        "gdpr",
         "data-retention",
+        "anonymization",
+        "pseudonymization",
+        "data-protection",
+        "privacy",
+        "pii",
+        "cleanup",
         "pruning",
-        "maintenance",
-        "artisan",
-        "scheduler"
+        "compliance",
+        "right-to-be-forgotten",
+        "maintenance"
     ],
     "license": "MIT",
     "version": "1.1.0",

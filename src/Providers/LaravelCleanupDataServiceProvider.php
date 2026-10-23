@@ -74,7 +74,7 @@ class LaravelCleanupDataServiceProvider extends ServiceProvider
 
             $this->publishes([
                 __DIR__.'/../Databases/Migrations/2026_10_22_100001_add_anonymized_at_to_users_table.php' => database_path('migrations/2026_10_22_100001_add_anonymized_at_to_users_table.php'),
-            ], 'data-cleanup-migrations');
+            ], 'laravel-cleanup-data-migrations');
 
             $this->registerSchedule();
         }
