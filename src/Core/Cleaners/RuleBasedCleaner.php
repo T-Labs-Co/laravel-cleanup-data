@@ -134,6 +134,9 @@ abstract class RuleBasedCleaner extends BaseCleaner
             $rule->apply($query);
         }
 
+        // Let the action apply query-level filtering (e.g., AnonymizeAction excludes already-anonymized rows)
+        $this->action()->applyToQuery($query);
+
         return $query;
     }
 }

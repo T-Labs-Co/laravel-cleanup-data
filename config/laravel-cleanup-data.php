@@ -38,12 +38,12 @@ return [
             // ],
         ],
 
-        /**
-         * Custom options configuration via prefix config key Cleaner `getConfigPrefix`
-         * 'custom_cleaner_key' => [
-         *      'enabled' => (bool) env('DATA_CLEANUP_CUSTOM_ENABLED', true),
-         * ]
-         */
+    /**
+     * Custom options configuration via prefix config key Cleaner `getConfigPrefix`
+     * 'custom_cleaner_key' => [
+     *      'enabled' => (bool) env('DATA_CLEANUP_CUSTOM_ENABLED', true),
+     * ]
+     */
     ],
 
     /**
@@ -115,7 +115,13 @@ return [
          * Default marker column for idempotent anonymization
          */
         'marker_column' => env('DATA_CLEANUP_RETENTION_MARKER_COLUMN', 'anonymized_at'),
-        'anonymized_at_column' => env('DATA_CLEANUP_RETENTION_ANONYMIZED_AT_COLUMN', 'anonymized_at'),
+
+        /**
+         * Exclude already-anonymized rows from the query using whereNull on the marker column.
+         * This improves performance and provides accurate dry-run counts by not including
+         * records that would be skipped at execution time.
+         */
+        'skip_anonymized_in_query' => (bool) env('DATA_CLEANUP_RETENTION_SKIP_ANONYMIZED_IN_QUERY', true),
 
         /**
          * Default domain for hashed email anonymization

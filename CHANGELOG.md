@@ -37,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`retention` config block** in `laravel-cleanup-data.php`:
   - `max_affected` — hard cap (default 10 000) on records per run before safety abort
   - `chunk_size` — chunk size for batch processing (default 500)
-  - `marker_column` / `anonymized_at_column` — idempotency marker for anonymization
+  - `marker_column` — idempotency marker for anonymization
   - `hash_domain` — domain used by `HashedEmailStrategy`
 - **Migration stub** `2026_10_22_100001_add_anonymized_at_to_users_table.php` — example migration for the anonymization marker column
 

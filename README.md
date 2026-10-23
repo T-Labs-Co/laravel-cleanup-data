@@ -106,6 +106,13 @@ Publish configuration file:
 php artisan vendor:publish --tag=laravel-cleanup-data-config
 ```
 
+Publish migrations, if apply idempotent anonymization for users with GDPR compliance:
+
+```bash
+php artisan vendor:publish --tag=laravel-cleanup-data-migrations
+php artisan migrate
+```
+
 ## Quick Start (3 minutes)
 
 ### 1. Data Anonymization (GDPR)

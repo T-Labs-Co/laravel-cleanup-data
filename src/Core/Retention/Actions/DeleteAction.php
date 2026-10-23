@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TLabsCo\LaravelCleanupData\Core\Retention\Actions;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use TLabsCo\LaravelCleanupData\Core\Retention\Contracts\CleanupAction;
 
@@ -22,5 +23,13 @@ final class DeleteAction implements CleanupAction
     public function preview(Model $model): array
     {
         return ['*' => $this->force ? 'force_delete' : 'delete'];
+    }
+
+    /**
+     * @phpstan-param Builder<Model> $query
+     */
+    public function applyToQuery(Builder $query): void
+    {
+        // No query-level filtering for delete actions
     }
 }

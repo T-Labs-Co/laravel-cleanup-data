@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TLabsCo\LaravelCleanupData\Core\Retention\Actions;
 
 use Closure;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use TLabsCo\LaravelCleanupData\Core\Retention\Contracts\CleanupAction;
 
@@ -50,5 +51,13 @@ final class TransformAction implements CleanupAction
         }
 
         return $fields;
+    }
+
+    /**
+     * @phpstan-param Builder<Model> $query
+     */
+    public function applyToQuery(Builder $query): void
+    {
+        // No query-level filtering for transform actions
     }
 }

@@ -331,6 +331,12 @@ class ModelPruner
             $query->where($this->column, '<', now()->subDays($this->days));
         }
 
+        // Let the action apply query-level filtering (e.g., AnonymizeAction excludes already-anonymized rows)
+        if ($this->action !== null) {
+            // @phpstan-ignore-next-line TModel is a subtype of Model, safe to pass
+            $this->action->applyToQuery($query);
+        }
+
         return $query;
     }
 
