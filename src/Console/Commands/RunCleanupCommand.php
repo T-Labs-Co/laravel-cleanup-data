@@ -140,7 +140,7 @@ class RunCleanupCommand extends Command
             $wouldProcess = $totalDeleted > 0 ? $totalDeleted : $totalProcessed;
             $this->warn("Would process: {$wouldProcess} items");
         } else {
-            $this->line("Items deleted: {$totalDeleted}");
+            $this->line("Items processed: {$totalDeleted}");
         }
         $this->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     }

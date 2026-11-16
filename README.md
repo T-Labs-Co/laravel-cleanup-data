@@ -5,8 +5,8 @@
 [![License](https://img.shields.io/packagist/l/t-labs-co/laravel-cleanup-data.svg)](https://packagist.org/packages/t-labs-co/laravel-cleanup-data)
 [![PHP](https://img.shields.io/packagist/php-v/t-labs-co/laravel-cleanup-data.svg)](https://packagist.org/packages/t-labs-co/laravel-cleanup-data)
 
-    GDPR-ready data retention, anonymization, and cleanup framework for Laravel.
-    Enforce data retention policies, pseudonymize personal data (PII), prune Eloquent models, clean storage files, and schedule automated compliance operations — all from a single config.
+GDPR-ready data retention, anonymization, and cleanup framework for Laravel.
+Enforce data retention policies, pseudonymize personal data (PII), prune Eloquent models, clean storage files, and schedule automated compliance operations — all from a single config.
 
 ## Features
 
@@ -26,6 +26,22 @@
 
 - PHP 8.4+
 - Laravel 12.0+ or 13.0+
+
+## Why not Prunable?
+
+Laravel's `Prunable` trait and `model:prune` are great for simple cases, and if all you do is delete old rows from a few models, use them. This package is for when retention becomes a policy rather than a one-off query.
+
+| Prunable / model:prune | Laravel Cleanup Data |
+|---|---|
+| Delete old model rows | ✅ | ✅ |
+| Dry run | ✅ `--pretend` | ✅ `--dry-run` / `->dryRun()` |
+| Where rules live | On each model | Central registry + fluent API |
+| Anonymize instead of delete | Custom code in `pruning()` | Built-in strategies (hash, mask, null, fixed) |
+| Run anonymization only once | Manual | `anonymized_at` marker |
+| Abort on mass-delete | Manual | `max_affected` cap |
+| Files, exports, non-model data | Separate commands | Custom cleaners with tags |
+| Run summaries | Manual | Audit log with counts and samples |
+| Extra dependency | None | One package |
 
 ## GDPR & Privacy Compliance
 
